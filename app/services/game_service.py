@@ -576,8 +576,9 @@ async def generate_llm_votes(
             raw = await openrouter_client.chat(
                 model=voter.model.model_id,
                 messages=messages,
-                max_tokens=10,
+                max_tokens=None,
                 temperature=0.3,
+                reasoning_enabled=True,
             )
             chosen_number = int("".join(filter(str.isdigit, raw.strip()[:5])))
         except (OpenRouterError, ValueError) as exc:

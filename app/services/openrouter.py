@@ -1,4 +1,5 @@
 import logging
+import ssl
 
 import httpx
 
@@ -30,8 +31,9 @@ class OpenRouterClient:
         self,
         model: str,
         messages: list[dict],
-        max_tokens: int = 300,
+        max_tokens: int | None = 300,
         temperature: float = 0.9,
+        reasoning_enabled: bool = False,
     ) -> str:
         """Send a chat completion request and return the assistant text."""
         if not self.api_key:
@@ -40,10 +42,14 @@ class OpenRouterClient:
         payload = {
             "model": model,
             "messages": messages,
-            "max_tokens": max_tokens,
             "temperature": temperature,
-            "reasoning": {"enabled": False},
         }
+        if max_tokens is not None:
+            payload["max_tokens"] = max_tokens
+        if reasoning_enabled:
+            payload["reasoning"] = {"enabled": True}
+        else:
+            payload["reasoning"] = {"enabled": False}
         logger.debug("OpenRouter request model=%s messages_count=%d", model, len(messages))
 
         response = await self._send(payload, model)
@@ -104,6 +110,9 @@ class OpenRouterClient:
                     headers=self._headers,
                     json=payload,
                 )
+        except ssl.SSLError as exc:
+            logger.error("OpenRouter TLS error for model %s: %s", model, exc)
+            raise OpenRouterError(f"TLS error for model {model}: {exc}") from exc
         except httpx.TimeoutException as exc:
             logger.error("OpenRouter timeout for model %s: %s", model, exc)
             raise OpenRouterError(f"Request timed out for model {model}") from exc
