@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+{% block title %}Админ-панель — LLM Game{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="text-warning mb-0">
+            <i class="bi bi-shield-lock me-2"></i>Админ-панель
+        </h2>
+        <a href="/admin/models" class="btn btn-outline-warning">
+            <i class="bi bi-cpu me-2"></i>Модели
+        </a>
+    </div>
+
+    {% if success %}
+    <div class="alert alert-success py-2">
+        Игры успешно добавлены пользователю
+        <strong>{{ request.query_params.get('login') }}</strong>.
+    </div>
+    {% endif %}
+    {% if request.query_params.get('error') == 'invalid_amount' %}
+    <div class="alert alert-danger py-2">Некорректное количество игр.</div>
+    {% endif %}
+    {% if request.query_params.get('error') == 'user_not_found' %}
+    <div class="alert alert-danger py-2">Пользователь не найден.</div>
+    {% endif %}
+
+    <!-- Search -->
+    <form method="get" action="/admin" class="mb-4">
+        <div class="input-group" style="max-width: 400px;">
+            <input
+                type="text"
+                name="search"
+                value="{{ search }}"
+                class="form-control bg-dark text-light border-secondary"
+                placeholder="Поиск по логину..."
+            >
+            <button type="submit" class="btn btn-outline-warning">
+                <i class="bi bi-search"></i>
+            </button>
+            {% if search %}
+            <a href="/admin" class="btn btn-outline-secondary">Сброс</a>
+            {% endif %}
+        </div>
+    </form>
+
+    <!-- Users table -->
+    <div class="table-responsive">
+        <table class="table table-dark table-hover border-secondary align-middle">
+            <thead class="text-warning">
+                <tr>
+                    <th>ID</th>
+                    <th>Логин</th>
+                    <th>Роль</th>
+                    <th>Доступных игр</th>
+                    <th>Зарегистрирован</th>
+                    <th>Действие</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for u in users %}
+                <tr>
+                    <td class="text-secondary">{{ u.id }}</td>
+                    <td>
+                        {{ u.login }}
+                        {% if u.id == user.id %}
+                            <span class="badge bg-secondary ms-1">вы</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if u.role == 'admin' %}
+                            <span class="badge bg-warning text-dark">admin</span>
+                        {% else %}
+                            <span class="badge bg-secondary">user</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if u.role == 'admin' %}
+                            <span class="text-warning">∞</span>
+                        {% else %}
+                            <span class="{% if u.allowed_games > 0 %}text-success{% else %}text-danger{% endif %}">
+                                {{ u.allowed_games }}
+                            </span>
+                        {% endif %}
+                    </td>
+                    <td class="text-secondary small">
+                        {{ u.created_at.strftime('%d.%m.%Y') if u.created_at }}
+                    </td>
+                    <td>
+                        {% if u.role != 'admin' %}
+                        <form method="post" action="/admin/grant-games" class="d-flex gap-2 align-items-center">
+                            <input type="hidden" name="target_user_id" value="{{ u.id }}">
+                            <input
+                                type="number"
+                                name="amount"
+                                value="1"
+                                min="1"
+                                max="100"
+                                class="form-control form-control-sm bg-dark text-light border-secondary"
+                                style="width: 70px;"
+                            >
+                            <button type="submit" class="btn btn-sm btn-outline-warning text-nowrap">
+                                <i class="bi bi-plus-circle me-1"></i>Добавить
+                            </button>
+                        </form>
+                        {% else %}
+                        <span class="text-secondary small">—</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="6" class="text-center text-secondary py-4">
+                        Пользователи не найдены
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

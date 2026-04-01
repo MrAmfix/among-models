@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% block title %}Регистрация — LLM Game{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-5">
+            <div class="card bg-secondary bg-opacity-10 border-secondary">
+                <div class="card-body p-4">
+                    <h3 class="card-title mb-4 text-warning">
+                        <i class="bi bi-person-plus me-2"></i>Регистрация
+                    </h3>
+
+                    {% if error %}
+                    <div class="alert alert-danger py-2">{{ error }}</div>
+                    {% endif %}
+
+                    <form method="post" action="/register" novalidate>
+                        <div class="mb-3">
+                            <label class="form-label text-secondary">Логин</label>
+                            <input
+                                type="text"
+                                name="login"
+                                class="form-control bg-dark text-light border-secondary"
+                                placeholder="минимум 3 символа"
+                                required
+                                minlength="3"
+                                maxlength="64"
+                                autofocus
+                            >
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-secondary">Пароль</label>
+                            <input
+                                type="password"
+                                name="password"
+                                class="form-control bg-dark text-light border-secondary"
+                                placeholder="минимум 6 символов"
+                                required
+                                minlength="6"
+                            >
+                        </div>
+                        <div class="mb-4">
+                            <label class="form-label text-secondary">Подтверждение пароля</label>
+                            <input
+                                type="password"
+                                name="password2"
+                                class="form-control bg-dark text-light border-secondary"
+                                placeholder="повторите пароль"
+                                required
+                            >
+                        </div>
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-warning">
+                                Создать аккаунт
+                            </button>
+                        </div>
+                    </form>
+
+                    <p class="text-center text-secondary mt-3 mb-0 small">
+                        Уже есть аккаунт? <a href="/login" class="text-warning">Войти</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

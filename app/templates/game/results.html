@@ -1,0 +1,139 @@
+{% extends "base.html" %}
+{% block title %}Результаты — {{ game.title }}{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+
+    <!-- Outcome banner -->
+    <div class="text-center mb-5">
+        {% if human_won %}
+        <div class="display-1 mb-2">🎉</div>
+        <h1 class="text-success fw-bold">Вы выиграли!</h1>
+        <p class="text-secondary fs-5">
+            Большинство голосов получил <strong>{{ winner.display_name }}</strong>,
+            но это языковая модель. Вам удалось не выдать себя.
+        </p>
+        {% elif winner %}
+        <div class="display-1 mb-2">🤖</div>
+        <h1 class="text-danger fw-bold">Вас раскрыли!</h1>
+        <p class="text-secondary fs-5">
+            Большинство голосов получил <strong>{{ winner.display_name }}</strong>.
+            Это вы — человек.
+        </p>
+        {% else %}
+        <div class="display-1 mb-2">🤔</div>
+        <h1 class="text-secondary">Результат не определён</h1>
+        {% endif %}
+    </div>
+
+    <div class="row g-4">
+        <!-- Vote results -->
+        <div class="col-md-5">
+            <div class="card bg-secondary bg-opacity-10 border-secondary mb-4">
+                <div class="card-body">
+                    <h5 class="text-warning mb-3">
+                        <i class="bi bi-bar-chart me-2"></i>Итоги голосования
+                    </h5>
+                    {% set total_votes = vote_counts.values()|sum %}
+                    {% for player in players|sort(attribute='id') %}
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <span class="small">
+                                {{ player.display_name }}
+                                {% if player.id == game.human_player_id %}
+                                    <span class="badge bg-warning text-dark ms-1">человек</span>
+                                {% else %}
+                                    <span class="badge bg-secondary ms-1">ИИ</span>
+                                {% endif %}
+                            </span>
+                            <span class="small text-secondary">
+                                {{ vote_counts.get(player.id, 0) }} / {{ total_votes }}
+                            </span>
+                        </div>
+                        <div class="progress" style="height: 8px;">
+                            <div class="progress-bar
+                                {% if winner and player.id == winner.id %}bg-warning{% else %}bg-secondary{% endif %}"
+                                style="width: {{ ((vote_counts.get(player.id, 0) / [total_votes, 1]|max) * 100)|int }}%">
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Who was who -->
+            <div class="card bg-secondary bg-opacity-10 border-secondary">
+                <div class="card-body">
+                    <h5 class="text-warning mb-3">
+                        <i class="bi bi-incognito me-2"></i>Кто есть кто
+                    </h5>
+                    <ul class="list-unstyled mb-0">
+                        {% for player in players|sort(attribute='display_name') %}
+                        <li class="d-flex align-items-center gap-2 mb-2">
+                            {% if player.player_type == 'human' %}
+                                <i class="bi bi-person-fill text-warning fs-5"></i>
+                                <span>{{ player.display_name }}</span>
+                                <span class="badge bg-warning text-dark ms-auto">Человек (вы)</span>
+                            {% else %}
+                                <i class="bi bi-robot text-secondary fs-5"></i>
+                                <span>{{ player.display_name }}</span>
+                                <span class="badge bg-secondary ms-auto small">
+                                    {{ player.model.name if player.model }}
+                                </span>
+                            {% endif %}
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Round history -->
+        <div class="col-md-7">
+            <h5 class="text-warning mb-3">
+                <i class="bi bi-clock-history me-2"></i>История раундов
+            </h5>
+            {% for r in rounds %}
+            <div class="card bg-secondary bg-opacity-10 border-secondary mb-3">
+                <div class="card-header border-secondary d-flex justify-content-between">
+                    <span class="fw-semibold">Раунд {{ r.round_number }} — {{ r.topic.name }}</span>
+                </div>
+                <div class="card-body">
+                    {% if r.question %}
+                    <p class="text-secondary small mb-2">
+                        <i class="bi bi-question-circle me-1"></i>
+                        {{ r.question.text }}
+                    </p>
+                    {% endif %}
+                    {% for answer in r.answers|sort(attribute='display_order') %}
+                    <div class="mb-2 p-2 rounded
+                        {% if answer.player_id == game.human_player_id %}
+                            bg-warning bg-opacity-10 border border-warning border-opacity-25
+                        {% else %}
+                            bg-dark
+                        {% endif %}">
+                        <span class="text-secondary small">
+                            Участник {{ answer.display_order }}
+                            {% if answer.player_id == game.human_player_id %}
+                                <span class="badge bg-warning text-dark">вы</span>
+                            {% endif %}
+                        </span>
+                        <p class="mb-0 small mt-1">{{ answer.text }}</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="text-center mt-5 d-flex gap-3 justify-content-center">
+        <a href="/game/create" class="btn btn-warning px-4">
+            <i class="bi bi-plus-circle me-2"></i>Сыграть ещё раз
+        </a>
+        <a href="/dashboard" class="btn btn-outline-secondary px-4">
+            <i class="bi bi-house me-2"></i>Личный кабинет
+        </a>
+    </div>
+</div>
+{% endblock %}

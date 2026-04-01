@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% block title %}Вход — LLM Game{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-5">
+            <div class="card bg-secondary bg-opacity-10 border-secondary">
+                <div class="card-body p-4">
+                    <h3 class="card-title mb-4 text-warning">
+                        <i class="bi bi-box-arrow-in-right me-2"></i>Вход
+                    </h3>
+
+                    {% if registered %}
+                    <div class="alert alert-success py-2">
+                        Аккаунт создан. Войдите, чтобы продолжить.
+                    </div>
+                    {% endif %}
+
+                    {% if error %}
+                    <div class="alert alert-danger py-2">{{ error }}</div>
+                    {% endif %}
+
+                    <form method="post" action="/login" novalidate>
+                        <div class="mb-3">
+                            <label class="form-label text-secondary">Логин</label>
+                            <input
+                                type="text"
+                                name="login"
+                                class="form-control bg-dark text-light border-secondary"
+                                required
+                                autofocus
+                            >
+                        </div>
+                        <div class="mb-4">
+                            <label class="form-label text-secondary">Пароль</label>
+                            <input
+                                type="password"
+                                name="password"
+                                class="form-control bg-dark text-light border-secondary"
+                                required
+                            >
+                        </div>
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-warning">
+                                Войти
+                            </button>
+                        </div>
+                    </form>
+
+                    <p class="text-center text-secondary mt-3 mb-0 small">
+                        Нет аккаунта? <a href="/register" class="text-warning">Зарегистрироваться</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

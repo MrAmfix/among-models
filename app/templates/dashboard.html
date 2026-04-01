@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+{% block title %}Личный кабинет — LLM Game{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row g-4">
+
+        <!-- Left: user info -->
+        <div class="col-md-4">
+            <div class="card bg-secondary bg-opacity-10 border-secondary mb-3">
+                <div class="card-body">
+                    <h5 class="card-title text-warning mb-3">
+                        <i class="bi bi-person-circle me-2"></i>{{ user.login }}
+                    </h5>
+                    <p class="mb-1 text-light opacity-75 small">Роль</p>
+                    <p class="mb-3">
+                        {% if user.is_admin %}
+                            <span class="badge bg-warning text-dark">Администратор</span>
+                        {% else %}
+                            <span class="badge bg-secondary">Пользователь</span>
+                        {% endif %}
+                    </p>
+                    <p class="mb-1 text-light opacity-75 small">Доступных игр</p>
+                    <p class="mb-0 fs-4 fw-bold {% if user.is_admin %}text-warning{% elif user.allowed_games > 0 %}text-success{% else %}text-danger{% endif %}">
+                        {% if user.is_admin %}
+                            ∞
+                        {% else %}
+                            {{ user.allowed_games }}
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
+
+            {% if user.is_admin or user.allowed_games > 0 %}
+            <a href="/game/create" class="btn btn-warning w-100">
+                <i class="bi bi-plus-circle me-2"></i>Создать игру
+            </a>
+            {% else %}
+            <button class="btn btn-secondary w-100" disabled title="Нет доступных игр">
+                <i class="bi bi-lock me-2"></i>Создать игру
+            </button>
+            <p class="text-light opacity-75 small mt-2 text-center">
+                Обратитесь к администратору для получения доступа
+            </p>
+            {% endif %}
+
+            {% if request.query_params.get('error') == 'no_games' %}
+            <div class="alert alert-danger mt-3 py-2 small">
+                У вас нет доступных игр
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Right: games list -->
+        <div class="col-md-8">
+            <h4 class="mb-3 text-warning">
+                <i class="bi bi-controller me-2"></i>Мои игры
+            </h4>
+
+            {% if games %}
+            <div class="list-group list-group-flush">
+                {% for game in games %}
+                <a href="/game/{{ game.id }}" class="list-group-item list-group-item-action text-light bg-secondary bg-opacity-10 border-secondary mb-2 rounded">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <span class="fw-semibold">{{ game.title }}</span>
+                            <span class="ms-2 badge
+                                {% if game.status.value == 'finished' %}bg-success
+                                {% elif game.status.value == 'lobby' %}bg-secondary
+                                {% else %}bg-warning text-dark{% endif %}">
+                                {% if game.status.value == 'lobby' %}Лобби
+                                {% elif game.status.value == 'playing' %}Идёт
+                                {% elif game.status.value == 'voting' %}Голосование
+                                {% elif game.status.value == 'tiebreak' %}Переголосование
+                                {% elif game.status.value == 'finished' %}Завершена
+                                {% endif %}
+                            </span>
+                        </div>
+                        <small class="text-light opacity-75">
+                            {{ game.created_at.strftime('%d.%m.%Y') if game.created_at }}
+                        </small>
+                    </div>
+                </a>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="text-center text-light opacity-75 py-5">
+                <i class="bi bi-inbox fs-1"></i>
+                <p class="mt-2">У вас ещё нет игр</p>
+            </div>
+            {% endif %}
+        </div>
+
+    </div>
+</div>
+{% endblock %}

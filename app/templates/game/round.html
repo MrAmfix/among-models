@@ -1,0 +1,190 @@
+{% extends "base.html" %}
+{% block title %}Раунд {{ round.round_number }} — {{ game.title }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <a href="/game/{{ game.id }}" class="text-secondary text-decoration-none small">
+                <i class="bi bi-arrow-left me-1"></i>{{ game.title }}
+            </a>
+            <h3 class="text-warning mb-0 mt-1">
+                Раунд {{ round.round_number }} / {{ total_rounds }}
+                <span class="text-secondary fw-normal fs-5 ms-2">{{ round.topic.name }}</span>
+            </h3>
+        </div>
+        <div class="text-end">
+            <span class="badge bg-secondary">{{ round.status }}</span>
+        </div>
+    </div>
+
+    <!-- Question -->
+    {% if question %}
+    <div class="card bg-warning bg-opacity-10 border-warning mb-4">
+        <div class="card-body">
+            <p class="text-secondary small mb-1"><i class="bi bi-question-circle me-1"></i>Вопрос</p>
+            <p class="fs-5 mb-0 fw-semibold text-light">{{ question.text }}</p>
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="row g-4">
+        <!-- Left: answer form or answers -->
+        <div class="col-lg-7">
+
+            <!-- Human answer form (shown if not yet answered) -->
+            {% if not human_answer and round.status == 'answering' %}
+            <div class="card bg-secondary bg-opacity-10 border-secondary mb-4">
+                <div class="card-body">
+                    <h5 class="text-warning mb-3">
+                        <i class="bi bi-pencil me-2"></i>Ваш ответ
+                    </h5>
+                    <p class="text-secondary small">
+                        Отвечайте коротко — 1-2 предложения. Старайтесь не выдать себя!
+                    </p>
+                    <form method="post" action="/game/{{ game.id }}/round/{{ round.round_number }}/answer">
+                        <textarea
+                            name="answer_text"
+                            class="form-control bg-dark text-light border-secondary mb-3"
+                            rows="3"
+                            placeholder="Напишите ваш ответ здесь..."
+                            maxlength="500"
+                            required
+                            autofocus
+                        ></textarea>
+                        <button type="submit" class="btn btn-warning">
+                            <i class="bi bi-send me-2"></i>Отправить ответ
+                        </button>
+                    </form>
+                </div>
+            </div>
+            {% endif %}
+
+            {% if human_answer and round.status == 'answering' %}
+            <div class="alert alert-info py-2 mb-4">
+                <i class="bi bi-hourglass-split me-2"></i>
+                Ваш ответ принят. Ожидаем ответы всех моделей...
+            </div>
+            {% endif %}
+
+            <!-- All answers (shown after human answered) -->
+            {% if human_answer %}
+            <h5 class="text-warning mb-3">
+                <i class="bi bi-chat-square-text me-2"></i>Ответы участников
+            </h5>
+            {% for player in players|sort(attribute='id') %}
+            {% set answer = answers_map.get(player.id) %}
+            <div class="card mb-3
+                {% if player.id == human_player.id %}
+                    border-warning bg-warning bg-opacity-10
+                {% else %}
+                    border-secondary bg-secondary bg-opacity-10
+                {% endif %}">
+                <div class="card-body py-3">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <span class="fw-semibold text-secondary small">
+                            {{ player.display_name }}
+                            {% if player.id == human_player.id %}
+                                <span class="badge bg-warning text-dark ms-1">вы</span>
+                            {% endif %}
+                        </span>
+                    </div>
+                    {% if answer %}
+                    <p class="mb-0">{{ answer.text }}</p>
+                    {% else %}
+                    <p class="mb-0 text-light opacity-75">
+                        <i class="bi bi-arrow-repeat me-1"></i>Модель ещё генерирует ответ...
+                    </p>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+            {% endif %}
+
+        </div>
+
+        <!-- Right: discussion -->
+        <div class="col-lg-5">
+            {% if discussions or (human_answer and round.status in ('discussing', 'done')) %}
+            <h5 class="text-warning mb-3">
+                <i class="bi bi-chat-dots me-2"></i>Обсуждение
+            </h5>
+
+            {% if round.status == 'discussing' and not discussions %}
+            <div class="alert alert-info py-2 mb-3">
+                <i class="bi bi-hourglass-split me-2"></i>
+                Модели пишут комментарии к обсуждению...
+            </div>
+            {% endif %}
+
+            {% for disc in discussions|sort(attribute='message_order') %}
+            <div class="card mb-3 border-secondary bg-secondary bg-opacity-10">
+                <div class="card-body py-3">
+                    <p class="text-secondary small mb-1">
+                        {% if disc.player_id == human_player.id %}
+                            <i class="bi bi-person-fill me-1 text-warning"></i>
+                            <span class="text-warning">Вы</span>
+                        {% else %}
+                            <i class="bi bi-robot me-1"></i>{{ disc.player.display_name if disc.player else "Участник" }}
+                        {% endif %}
+                    </p>
+                    <p class="mb-0">{{ disc.text }}</p>
+                </div>
+            </div>
+            {% endfor %}
+
+            <!-- Human discussion form -->
+            {% if not human_discussion and round.status in ('discussing', 'done') %}
+            <div class="card border-secondary bg-secondary bg-opacity-10 mt-3">
+                <div class="card-body">
+                    <h6 class="text-secondary mb-2">Добавить комментарий</h6>
+                    <form method="post" action="/game/{{ game.id }}/round/{{ round.round_number }}/discuss">
+                        <textarea
+                            name="discussion_text"
+                            class="form-control bg-dark text-light border-secondary mb-2"
+                            rows="2"
+                            placeholder="Ваш комментарий к обсуждению..."
+                            maxlength="300"
+                        ></textarea>
+                        <button type="submit" class="btn btn-sm btn-outline-warning">
+                            <i class="bi bi-send me-1"></i>Отправить
+                        </button>
+                    </form>
+                </div>
+            </div>
+            {% endif %}
+            {% endif %}
+
+            <!-- Navigation -->
+            <div class="mt-4">
+                {% if round.status == 'done' %}
+                    {% if round.round_number < total_rounds %}
+                    <form method="post" action="/game/{{ game.id }}/start-round">
+                        <button type="submit" class="btn btn-warning w-100">
+                            <i class="bi bi-arrow-right-circle me-2"></i>
+                            Следующий раунд
+                        </button>
+                    </form>
+                    {% else %}
+                    <a href="/game/{{ game.id }}/vote" class="btn btn-warning w-100">
+                        <i class="bi bi-ballot me-2"></i>
+                        Перейти к голосованию
+                    </a>
+                    {% endif %}
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+{% if (round.status == 'answering' and human_answer) or round.status == 'discussing' %}
+<script>
+    setTimeout(() => window.location.reload(), 2500);
+</script>
+{% endif %}
+{% endblock %}

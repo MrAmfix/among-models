@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+{% block title %}Голосование — {{ game.title }}{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-7">
+            <div class="text-center mb-5">
+                <i class="bi bi-ballot fs-1 text-warning"></i>
+                <h2 class="text-warning mt-2">Финальное голосование</h2>
+                <p class="text-secondary">
+                    Все раунды завершены. Кто из участников, по-вашему, является человеком?
+                </p>
+            </div>
+
+            {% if not human_voted %}
+            <form method="post" action="/game/{{ game.id }}/vote">
+                <div class="list-group mb-4">
+                    {% for player in players %}
+                    <label class="list-group-item list-group-item-action bg-secondary bg-opacity-10 border-secondary mb-2 rounded cursor-pointer">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div class="d-flex align-items-center gap-3">
+                                <input
+                                    type="radio"
+                                    name="target_player_id"
+                                    value="{{ player.id }}"
+                                    class="form-check-input"
+                                    {% if player.id == game.human_player_id %}disabled{% endif %}
+                                    required
+                                >
+                                <span class="fw-semibold">{{ player.display_name }}</span>
+                            </div>
+                            {% if player.id == game.human_player_id %}
+                                <span class="badge bg-warning text-dark">вы</span>
+                            {% else %}
+                                <i class="bi bi-question-circle text-secondary"></i>
+                            {% endif %}
+                        </div>
+                    </label>
+                    {% endfor %}
+                </div>
+                <div class="d-grid">
+                    <button type="submit" class="btn btn-warning btn-lg">
+                        <i class="bi bi-hand-thumbs-up me-2"></i>Проголосовать
+                    </button>
+                </div>
+            </form>
+
+            {% else %}
+            <!-- Results after voting -->
+            <h5 class="text-secondary mb-3">Результаты голосования</h5>
+            <div class="list-group mb-4">
+                {% for player in players %}
+                <div class="list-group-item bg-secondary bg-opacity-10 border-secondary mb-2 rounded">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <span class="fw-semibold">{{ player.display_name }}</span>
+                        <div class="d-flex align-items-center gap-2">
+                            {% if player.id == game.human_player_id %}
+                                <span class="badge bg-warning text-dark">вы (человек)</span>
+                            {% endif %}
+                            <span class="badge bg-secondary">
+                                {{ vote_counts.get(player.id, 0) }} голос(ов)
+                            </span>
+                        </div>
+                    </div>
+                    <div class="progress" style="height: 6px;">
+                        <div class="progress-bar bg-warning"
+                             style="width: {{ ((vote_counts.get(player.id, 0) / [vote_counts.values()|sum, 1]|max) * 100)|int }}%">
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <div class="text-center">
+                <p class="text-secondary">Подсчёт завершён. Переходим к результатам...</p>
+                <a href="/game/{{ game.id }}/results" class="btn btn-warning btn-lg">
+                    <i class="bi bi-trophy me-2"></i>Результаты
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
