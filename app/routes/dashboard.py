@@ -5,8 +5,7 @@ from sqlalchemy.orm import Session
 
 from app.db.base import get_db
 from app.models.game import Game
-from app.routes.deps import get_current_user, require_user
-from app.models.user import User
+from app.routes.deps import get_current_user
 
 router = APIRouter()
 templates = Jinja2Templates(directory="app/templates")

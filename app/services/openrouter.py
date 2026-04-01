@@ -22,8 +22,8 @@ class OpenRouterClient:
         self._headers = {
             "Authorization": f"Bearer {self.api_key}",
             "Content-Type": "application/json",
-            "HTTP-Referer": "https://llmgame.local",
-            "X-Title": "LLM Game",
+            "HTTP-Referer": "https://amongmodels.local",
+            "X-Title": "Among Models",
         }
 
     async def chat(

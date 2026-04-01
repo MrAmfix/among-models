@@ -14,7 +14,7 @@ logging.basicConfig(
     format="%(asctime)s %(levelname)s %(name)s: %(message)s",
 )
 
-app = FastAPI(title="LLM Game", docs_url=None, redoc_url=None)
+app = FastAPI(title="Among Models", docs_url=None, redoc_url=None)
 
 app.add_middleware(
     SessionMiddleware,
